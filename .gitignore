@@ -1,6 +1,7 @@
 node_modules
 /build
 /cache
+/dist
 .idea
-.env
+#.env
 chain-explorer.iml
