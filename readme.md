@@ -1,6 +1,5 @@
 
 
-```markdown
 # Ethereum Chain Explorer (Node.js + TypeScript)
 
 ## 📌 Project Overview
@@ -25,7 +24,7 @@ It uses [ethers.js](https://docs.ethers.org/) and the [Alchemy SDK](https://docs
 - 🔌 **Modular architecture**: MVC-like structure with `controllers`, `providers`, and `utils`
 - 📦 **No bundler required**: Uses native ES modules and `<script type="module">` in browser
 - 🔧 **Handlebars** for partials and dynamic tab injection
-- 🧠 **Smart loading**: Tabs are loaded once (with memoization)
+- 🧠 **Smart loading**: Tabs are loaded once (with memorization)
 - 📡 **ENS & token support**: Full support for resolving human-readable names and assets
 - 🔁 **Live reload dev setup** (optional)
 - 🧪 **Hardhat** support for local testing (optional)
@@ -40,12 +39,11 @@ It uses [ethers.js](https://docs.ethers.org/) and the [Alchemy SDK](https://docs
 - A valid Ethereum API provider:
   - Alchemy (recommended)
   - Etherscan (fallback — limited)
-- Create a `.env` file (or symlink to an existing one) with:
+- Use the provided `.env` file with your own keys (symlink recommended) with:
+
 ```
-
-ALCHEMY\_API\_KEY=your\_key\_here
-ETHERSCAN\_API\_KEY=your\_key\_here
-
+`ALCHEMY\_API\_KEY=your\_key\_here`
+`ETHERSCAN\_API\_KEY=your\_key\_here`
 ````
 
 ### 🔧 Optional (for development)
