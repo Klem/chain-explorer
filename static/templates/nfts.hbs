@@ -1,0 +1,92 @@
+{{#if error}}
+    {{> error}}
+{{/if}}
+{{#unless error}}
+    {{#if this.length}}
+        <table class="table table-bordered table-hover align-middle">
+            <thead class="table-light">
+            <tr>
+                <th style="width: 80px;">Image</th>
+                <th>Name</th>
+                <th>Collection</th>
+                <th>ID</th>
+                <th>Standard</th>
+                <th>Balance</th>
+                <th>Contract</th>
+                <th>Type</th>
+                <th>OpenSea</th>
+            </tr>
+            </thead>
+            <tbody>
+            {{#each this}}
+                <tr>
+                    <!-- Image -->
+                    <td>
+                        {{#if image.originalUrl}}
+                            <img src="{{image.originalUrl}}" alt="NFT" class="img-thumbnail"
+                                 style="max-width: 64px; max-height: 64px;">
+                        {{else if contract.openSeaMetadata.imageUrl}}
+                            <img src="{{contract.openSeaMetadata.imageUrl}}" alt="NFT" class="img-thumbnail"
+                                 style="max-width: 64px; max-height: 64px;">
+                        {{else}}
+                            <span class="text-muted small">N/A</span>
+                        {{/if}}
+                    </td>
+
+                    <!-- Name -->
+                    <td>
+                        {{#if name}}{{name}}{{else}}<em class="text-muted">Unnamed</em>{{/if}}
+                    </td>
+
+                    <!-- Collection -->
+                    <td>
+                        {{#if collection.name}}
+                            {{collection.name}}
+                        {{else if contract.name}}
+                            {{contract.name}}
+                        {{else if contract.openSeaMetadata.collectionName}}
+                            {{contract.openSeaMetadata.collectionName}}
+                        {{else}}
+                            <span class="text-muted">Unknown</span>
+                        {{/if}}
+                    </td>
+
+                    <!-- Token ID -->
+                    <td class="text-break"><code>{{tokenId}}</code></td>
+
+                    <!-- Type -->
+                    <td>{{tokenType}}</td>
+
+                    <!-- Balance -->
+                    <td>{{balance}}</td>
+
+                    <!-- Contract -->
+                    <td>
+                        {{#if contract.address}}
+                            <a href="#" class="nft-hash-link" data-nft='{{{json this}}}'>{{contract.address}}</a>
+                        {{else}}
+                            <span class="text-muted">N/A</span>
+                        {{/if}}
+                    </td>
+
+                    <td>{{nftAccount}}</td>
+
+                    <!-- OpenSea -->
+                    <td>
+                        {{#if contract.openSeaMetadata.collectionSlug}}
+                            <a href="https://opensea.io/collection/{{contract.openSeaMetadata.collectionSlug}}"
+                               target="_blank" class="btn btn-sm btn-outline-primary">View</a>
+                        {{else}}
+                            <span class="text-muted">—</span>
+                        {{/if}}
+                    </td>
+                </tr>
+            {{/each}}
+            </tbody>
+        </table>
+    {{else}}
+        <div class="alert alert-info d-flex flex-column align-items-center text-center" role="alert">
+            <strong>No Nfts to display</strong>
+        </div>
+    {{/if}}
+{{/unless}}

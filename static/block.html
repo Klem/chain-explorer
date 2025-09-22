@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Block Details</title>
+    <link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css"/>
+    <script src="/bootstrap/js/bootstrap.bundle.js"></script>
+    <script src="/handlebars/handlebars.js"></script>
+
+    <script type="module">
+        import {showTxModal} from '/dist/components/modal.js';
+        import {
+            registerHbsPartials,
+            renderWithTemplate,
+            renderError,
+            renderSpinner,
+            isHash
+        } from '/dist/utils/utils-frontend.js';
+
+        /**
+         * Load and inject block data in dom
+         * @returns {Promise<void>}
+         */
+        async function loadBlock() {
+
+            // inject subtemplate in root node
+            registerHbsPartials()
+
+            const hash = window.location.pathname.split('/').pop(); //extracts the block ID from the URL
+            let container = document.getElementsByTagName("body").item(0);
+
+            // if address is invalid, display error message and stop
+            if (!isHash(hash)) {
+                renderError("Invalid block hash", hash, container)
+                return
+            }
+
+            renderSpinner(`Loading block ${hash}`, container);
+
+            const res = await fetch(`/api/block/${hash}`);
+            const json = await res.json();
+
+
+            await renderWithTemplate("/templates/block.hbs", json, container)
+        }
+
+        /**
+         * Avoid inlined javascript (for hbs)
+         * get the trigger link, extract data and call modal builder
+         */
+        document.addEventListener('click', (e) => {
+            const triggerLink = e.target.closest('.tx-hash-link');
+            if (!triggerLink) return;
+            e.preventDefault();
+            const txDataStr = triggerLink.getAttribute('data-tx');
+            const data = JSON.parse(txDataStr);
+            showTxModal('txModal', data);
+        });
+
+        window.onload = () => {
+            loadBlock();
+        };
+
+    </script>
+
+</head>
+<body class="container mt-4">
+</body>
+
+</html>

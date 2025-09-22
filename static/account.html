@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Block Details</title>
+    <link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css"/>
+    <script src="/bootstrap/js/bootstrap.bundle.js"></script>
+    <script src="/handlebars/handlebars.js"></script>
+<!--    no need for an external css for this-->
+    <style>
+        .tab-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+    </style>
+    <script type="module">
+        import {showTxModal, showNftModal} from '/dist/components/modal.js';
+        import {
+            registerHbsPartials,
+            renderWithTemplate,
+            renderError,
+            renderSpinner
+        } from '/dist/utils/utils-frontend.js';
+        import {ethers} from "/ethers/ethers.js";
+
+        /**
+         * Loads the top level data of the account
+         * and inject in basic skeleton
+         * @returns {Promise<void>}
+         */
+        async function loadSummary() {
+            const address = window.location.pathname.split('/').pop(); //extracts the block ID from the URL
+            const titleEl = document.getElementById("account-title");
+            const balanceDom = document.getElementById("balance_value");
+            const ensDom = document.getElementById("ens_name");
+
+            titleEl.innerText += `${address}`;
+            document.title = titleEl.innerText;
+
+            const res = await fetch(`/api/account/${address}`);
+            const data = await res.json();
+            if (data.error) {
+                balanceDom.innerText += `${data.error}`;
+            } else {
+                balanceDom.innerText += `${data.balance} ETH`;
+                ensDom.innerText += `${data.ens}`;
+            }
+        }
+
+        /**
+         * Handle the tab logic
+         */
+        function loadTabs() {
+            // inject subtemplate in root node
+            registerHbsPartials()
+            const address = window.location.pathname.split('/').pop(); //extracts the block ID from the URL
+
+            // clear warning banner
+            document.getElementById("tabs").attributes.removeNamedItem("class");
+            document.getElementById("warning").hidden = true;
+            const tabs = document.querySelectorAll('button[data-bs-toggle="tab"]');
+            const loadedTabs = new Set();
+
+            tabs.forEach(btn => {
+                btn.addEventListener('shown.bs.tab', async (event) => {
+
+                    const tabButton = event.currentTarget // Type assertion for TypeScript
+                    let targetId = tabButton.getAttribute("data-bs-target");
+
+                    // do no refresh already loaded tabs
+                    if (loadedTabs.has(targetId)) return;
+
+                    // mark as loaded to not requery when changing
+                    // tab for the same account
+                    loadedTabs.add(targetId);
+
+                    const container = document.querySelector(targetId);
+
+                    // if address is invalid, display error message and stop
+                    if (!ethers.isAddress(address)) {
+                        renderError("Invalid address", address, container)
+                        return
+                    }
+
+                    let templatePath;
+
+                    try {
+                        let response;
+                        switch (targetId) {
+                            case "#nav-tx":
+                                renderSpinner("Loading transactions.....", container);
+                                response = await fetch(`/api/account/${address}/transfers`);
+                                templatePath = "/templates/transfers.hbs";
+                                break;
+                            case "#nav-tokens":
+                                renderSpinner("Loading tokens.....", container);
+                                response = await fetch(`/api/account/${address}/tokens`);
+                                templatePath = "/templates/tokens.hbs";
+                                break;
+                            case "#nav-nft":
+                                renderSpinner("Loading Nfts.....", container);
+                                response = await fetch(`/api/account/${address}/nfts`);
+                                templatePath = "/templates/nfts.hbs";
+                                break;
+                            default:
+                                return;
+                        }
+                        // fetch data
+                        const data = await response.json();
+                        // inject in hbs and attach to tab
+                        await renderWithTemplate(templatePath, data, container);
+                        // add item count to tab once fetched
+                        tabButton.innerText += ` (${data?.length})`;
+                    } catch (err) {
+                        console.log(err)
+                        renderError(err.error, address, container)
+                    }
+                });
+            });
+        }
+
+        /**
+         * Make the transaction hash clickable
+         * to display details in popup
+         */
+        document.addEventListener('click', async (e) => {
+            const triggerLink = e.target.closest('.tx-hash-link'); //specified in transfers.hbs
+            if (!triggerLink) return;
+            e.preventDefault();
+            let hash = triggerLink.textContent;
+            const res = await fetch(`/api/account/tx/${hash}`);
+            let data = await res.json();
+
+            showTxModal('txModal', data);
+        });
+
+        /**
+         * Make the nft contract address clickable
+         * to display details in popup
+         */
+        document.addEventListener('click', async (e) => {
+            const triggerLink = e.target.closest('.nft-hash-link'); //specified in nfts.hbs
+            if (!triggerLink) return;
+            e.preventDefault();
+            const txDataStr = triggerLink.getAttribute('data-nft');
+            const data = JSON.parse(txDataStr);
+            showNftModal('nftModal', data);
+        });
+
+        /**
+         * Load data button
+         */
+        window.onload = () => {
+            loadSummary();
+            document.getElementById("loadFromProvider").addEventListener("click", () => {
+                loadTabs();
+                const txTabButton = document.querySelector('button[data-bs-target="#nav-tx"]');
+                if (txTabButton) {
+                    const tab = new bootstrap.Tab(txTabButton);
+                    tab.show();
+                }
+            })
+        };
+    </script>
+</head>
+
+<!--Skeleton for navigation and template injection-->
+<body class="container mt-4">
+<h1 id="account-title">Account #</h1>
+<div id="content" class="row align-items-center mb-4">
+<!--    Account summary-->
+    <table class="table table-bordered table-hover table-sm align-middle">
+        <thead>
+        <tr>
+            <th>Balance</th>
+            <th>Ens</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td id="balance_value"></td>
+            <td id="ens_name"></td>
+        </tr>
+        </tbody>
+    </table>
+    <!-- Warning banner-->
+    <div id="warning" class="text-bg-warning">To view this data, you must have a configured provider (Alchemy,
+        etherscan...) along with a valid API key
+        <button id="loadFromProvider">Load Data</button>
+    </div>
+
+    <!-- Navigation Tabs-->
+    <div id="tabs" class="d-none">
+        <nav>
+            <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                <button class="nav-link" id="nav-tx-tab" data-bs-toggle="tab" data-bs-target="#nav-tx"
+                        type="button" role="tab" aria-controls="nav-tx" aria-selected="false">Transactions
+                </button>
+                <button class="nav-link" id="nav-tokens-tab" data-bs-toggle="tab" data-bs-target="#nav-tokens"
+                        type="button" role="tab" aria-controls="nav-tokens" aria-selected="false">Tokens
+                </button>
+                <button class="nav-link" id="nav-nft-tab" data-bs-toggle="tab" data-bs-target="#nav-nft"
+                        type="button"
+                        role="tab" aria-controls="nav-nft" aria-selected="false">Nft
+                </button>
+            </div>
+            <div class="tab-content" id="nav-tabContent">
+                <div class="tab-pane fade show active" id="nav-tx" role="tabpanel" aria-labelledby="nav-tx-tab">...
+                </div>
+                <div class="tab-pane fade" id="nav-tokens" role="tabpanel" aria-labelledby="nav-tokens-tab">...</div>
+                <div class="tab-pane fade" id="nav-nft" role="tabpanel" aria-labelledby="nav-nft-tab">...</div>
+            </div>
+        </nav>
+    </div>
+</div>
+</body>
+</html>

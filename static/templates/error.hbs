@@ -1,0 +1,6 @@
+<div class="alert alert-danger d-flex flex-column align-items-center text-center" role="alert">
+    <strong>{{error}}</strong>
+    {{#if hash}}
+    <a class="btn btn-sm btn-secondary mt-2" href="https://etherscan.io/search?f=0&q={{hash}}" target="_blank">View on etherscan</a>
+    {{/if}}
+</div>

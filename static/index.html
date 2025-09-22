@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Solde du Wallet</title>
+    <link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css"/>
+    <script src="/bootstrap/js/bootstrap.bundle.js"></script>
+    <script src="/handlebars/handlebars.js"></script>
+    <style>
+        @keyframes flash {
+            0% {
+                background-color: #f8d7da;
+            }
+            100% {
+                background-color: transparent;
+            }
+        }
+
+        .flash {
+            animation: flash 1.5s ease-out forwards;
+        }
+    </style>
+    <script type="module">
+        import {renderSpinner, renderError} from '/dist/utils/utils-frontend.js';
+        let blockTime = 10000 // avg ethereum blocktime
+        let lastSeenBlock = 0;
+        let autoRefresh, keepHistory;
+
+        /**
+         * Load the latest blocks
+         * @returns {Promise<void>}
+         */
+        async function loadBlocks(count) {
+            const container = document.getElementById('latest_blocks');
+            renderSpinner(`Loading last ${count} blocks`, container);
+
+            const res = await fetch(`/api/block/latest/${count}`);
+            const data = await res.json();
+
+            if (data.error) {
+                renderError(data.error, container);
+            } else {
+                // inject table template in container
+                const blockTable = document.getElementById("blocks-template");
+                container.innerHTML = ""
+                container.appendChild(blockTable.content.cloneNode(true))
+
+                //Populate table with found blocks
+                const tableBody = document.querySelector('#blocks-table tbody');
+                const blocks = data.blocks;
+                for (const block of blocks) {
+                    tableBody.appendChild(buildRow(block));
+                }
+            }
+        }
+
+
+        /**
+         * Load the latest blocks
+         * @returns {Promise<void>}
+         */
+        async function loadLatestBlock() {
+
+            const historyDisabled = !keepHistory.checked
+            const autoRefreshDisabled = !autoRefresh.checked
+
+            console.log(`Auto refresh: ${!autoRefreshDisabled}, history: ${!historyDisabled}`)
+
+            const tableBody = document.querySelector('#blocks-table tbody')
+
+            if(autoRefreshDisabled) {
+                console.log("Autorefresh is disabled")
+                // keepHistory.disabled = true;
+                // do nothing but still loop for re-enabling
+                setTimeout(loadLatestBlock, blockTime); // average ethereum blocktime
+                return;
+            } else {
+                // keepHistory.disabled = false;
+            }
+
+            try {
+                // fetch last block
+                const res = await fetch(`/api/block/latest/1`);
+                const data = await res.json();
+                if (data.error) {
+                    buildError(data.error);
+                } else {
+
+                    const latest = data.blocks[0];
+                    // no change
+                    if (latest.number === lastSeenBlock) {
+                        console.log(`Already fetched: ${latest.number}`);
+                        return;
+                    }
+                    lastSeenBlock = latest.number;
+
+                    const row = buildRow(latest)
+                    let td = row.querySelectorAll("td");
+                    // applies flashing effect on all cells
+                    td.forEach((el) => {
+                        el.classList.add('flash');
+                    })
+                    tableBody.insertBefore(row, tableBody.firstChild);
+                    if (historyDisabled) {
+                        tableBody.lastChild.remove()
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                buildError(err.message);
+            } finally {
+                    setTimeout(loadLatestBlock, blockTime);
+            }
+
+            /**
+             * Create a custom row for errors
+             * @param message
+             */
+            function buildError(message) {
+                const template = document.getElementById("error_row")
+
+                const clone = template.content.cloneNode(true)
+                const row = clone.querySelector('td');
+                tableBody.insertBefore(clone, tableBody.firstChild);
+                renderError(message, row);
+            }
+        }
+
+        /**
+         * Create a row based on blockData
+         * @param block
+         * @returns {HTMLTableRowElement}
+         */
+        function buildRow(block) {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td>${block.number}</td>
+                              <td><code><a href="/block/${block.hash}">${block.hash}</a></code></td>
+                              <td class=".text-secondary ">${new Date(block.timestamp * 1000).toUTCString()}</td>
+                              <td><code><a href = "/account/${block.miner}">${block.miner}</a></code></td>
+                              <td>${block.transactions.length}</td>`;
+
+            return row
+        }
+
+
+        window.onload = async () => {
+
+            let blocksCount = document.getElementById("blocks-count");
+            keepHistory = document.getElementById("keep_history")
+            autoRefresh = document.getElementById("auto_refresh")
+            await loadBlocks(blocksCount.value);
+            await loadLatestBlock();
+
+            blocksCount.addEventListener("change", async (e) => {
+                await loadBlocks(e.target.value);
+            });
+            // disable keep history
+            // when autorefresh is disabled
+            autoRefresh.addEventListener("change", async (e) => {
+                keepHistory.disabled = !e.target.checked
+                keepHistory.checked = e.target.checked
+            });
+
+
+        };
+    </script>
+</head>
+<body class="container mt-4">
+<div class="row align-items-center mb-4">
+    <div class="col">
+        <h1 class="m-0">Chain explorer</h1>
+    </div>
+    <div class="col-auto ms-auto">
+        <div class="d-flex align-items-center">
+            <label for="keep_history" class="me-2 mb-0">Keep History</label>
+            <input id="keep_history" type="checkbox">
+        </div>
+    </div>
+    <div class="col-auto ms-auto">
+        <div class="d-flex align-items-center">
+            <label for="auto_refresh" class="me-2 mb-0">Live update</label>
+            <input id="auto_refresh" type="checkbox" checked="checked">
+        </div>
+    </div>
+    <div class="col-auto ms-auto">
+        <div class="d-flex align-items-center">
+            <label for="blocks-count" class="me-2 mb-0">Load the</label>
+            <select id="blocks-count" class="form-select me-2" style="width: auto;">
+                <option value="10">10</option>
+                <option value="20" selected>20</option>
+                <option value="30">30</option>
+                <option value="40">40</option>
+                <option value="50">50</option>
+                <option value="60">60</option>
+            </select>
+            <label for="blocks-count" class="mb-0">latest blocks</label>
+        </div>
+    </div>
+
+
+    <div id="blocks" class="align-content-center">
+        <div id="latest_blocks">
+            <!--
+             Populated with vanilla JS
+             This page does not use templates as HBS
+             is not suitable for incremental DOM updates
+             -->
+        </div>
+    </div>
+</div>
+
+<!-- Template for the blocks table -->
+<template id="blocks-template">
+    <table id="blocks-table" class="table-striped table-bordered w-100">
+        <thead>
+        <tr>
+            <th scope="col">Block Height</th>
+            <th scope="col">Block Hash</th>
+            <th scope="col">Timestamp</th>
+            <th scope="col">Mined by</th>
+            <th scope="col">Tx Count</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!--
+        Filled by JS
+        This page does not use templates for HBS
+        is not suitable for incremental DOM updates
+        -->
+        </tbody>
+    </table>
+</template>
+<template id="error_row">
+    <tr>
+        <td colspan="5"></td>
+    </tr>
+</template>
+</body>
+</html>

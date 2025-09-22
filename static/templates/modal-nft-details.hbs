@@ -1,0 +1,91 @@
+<div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="txModal_Label">Nft: <br/>{{contract.address}}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            {{#if error}}
+                {{> error}}
+            {{/if}}
+            {{#unless error}}
+                <div class="card mt-3">
+                    <div class="card-header">
+                        Contract Details
+                        {{#if contract.isSpam}}
+                            <div class="alert alert-warning mt-3">
+                                ⚠️ This contract is flagged as spam.
+                            </div>
+                        {{/if}}
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Address:</strong> <code>{{contract.address}}</code> <a href="https://etherscan.io/address/{{contract.address}}" target="_blank" class="btn btn-sm btn-outline-primary">View on Etherscan</a></p>
+                        <p><strong>Name:</strong> {{contract.name}}</p>
+                        <p><strong>Symbol:</strong> {{contract.symbol}}</p>
+                        <p><strong>Token Type:</strong> {{contract.tokenType}}</p>
+                        <p><strong>Total Supply:</strong> {{contract.totalSupply}}</p>
+                        <p><strong>Deployer:</strong> <code>{{contract.contractDeployer}}</code> <a href="https://etherscan.io/address/{{contract.contractDeployer}}" target="_blank" class="btn btn-sm btn-outline-primary">View on Etherscan</a></p></p>
+                        <p><strong>Deployed Block:</strong> {{contract.deployedBlockNumber}}</p>
+
+                        {{#if contract.openSeaMetadata}}
+                            <hr>
+                            <h6>OpenSea Metadata</h6>
+                            {{#if contract.openSeaMetadata.imageUrl}}
+                                <img src="{{contract.openSeaMetadata.imageUrl}}" alt="Collection Image"
+                                     class="img-fluid mb-2" style="max-height: 200px;">
+                            {{/if}}
+                            <p><strong>Collection Name:</strong> {{contract.openSeaMetadata.collectionName}}</p>
+                            <p><strong>Collection Slug:</strong> {{contract.openSeaMetadata.collectionSlug}}</p>
+                            <p><strong>Description:</strong> {{contract.openSeaMetadata.description}}</p>
+                            <p><strong>Safelist Status:</strong> {{contract.openSeaMetadata.safelistRequestStatus}}</p>
+                            <p><strong>Last Ingested:</strong> {{contract.openSeaMetadata.lastIngestedAt}}</p>
+                        {{/if}}
+                    </div>
+                </div>
+
+                {{#if raw.metadata}}
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            Raw Metadata
+                        </div>
+                        <div class="card-body">
+                            {{#if raw.metadata.name}}<p><strong>Name:</strong> {{raw.metadata.name}}</p>{{/if}}
+                            {{#if raw.metadata.description}}
+                                <p><strong>Description:</strong> {{raw.metadata.description}}</p>{{/if}}
+                            {{#if raw.metadata.image}}
+                                <p><strong>Raw Image:</strong></p>
+                                <img src="{{raw.metadata.image}}" alt="NFT Image" class="img-fluid mb-2"
+                                     style="max-height: 200px;">
+                            {{/if}}
+                            {{#if raw.metadata.external_url}}
+                                <p><strong>External URL:</strong> <a href="{{raw.metadata.external_url}}"
+                                                                     target="_blank">{{raw.metadata.external_url}}</a>
+                                </p>{{/if}}
+                            {{#if raw.metadata.attributes}}
+                                <p><strong>Attributes:</strong></p>
+                                <ul>
+                                    {{#each raw.metadata.attributes}}
+                                        <li>{{trait_type}}: {{value}}</li>
+                                    {{/each}}
+                                </ul>
+                            {{/if}}
+                        </div>
+                    </div>
+                {{/if}}
+
+                {{#if image.originalUrl}}
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            Image Preview
+                        </div>
+                        <div class="card-body text-center">
+                            <img src="{{image.originalUrl}}" alt="NFT Image" class="img-fluid"
+                                 style="max-height: 300px;">
+                            <p class="mt-2 text-muted">{{image.contentType}} ({{image.size}} bytes)</p>
+                        </div>
+                    </div>
+                {{/if}}
+            {{/unless}}
+        </div>
+    </div>
+</div>

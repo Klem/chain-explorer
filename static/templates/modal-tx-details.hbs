@@ -1,0 +1,69 @@
+<div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="txModal_Label">Transaction: <br/>{{hash}}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            {{#if error}}
+               {{> error}}
+            {{/if}}
+            {{#unless error}}
+                <div class="table-responsive">
+                    <table class="table-bordered table-striped table-sm">
+                        <tbody class="text-break">
+                        <tr>
+                            <th class="text-nowrap" scope="row">From</th>
+                            <td class="text-break"><a href="/account/{{from}}" target="_blank">{{from}}</a></td>
+                        </tr>
+                        <tr>
+                            <th class="text-nowrap" scope="row">To</th>
+                            <td class="text-break"><a href="/account/{{to}}" target="_blank">{{to}}</a></td>
+                        </tr>
+                        <tr>
+                            <th class="text-nowrap" scope="row">Data</th>
+                            <td class="text-break"><code>{{data}}</code></td>
+                        </tr>
+                        <tr>
+                            <th class="text-nowrap" scope="row">Type</th>
+                            <td class="text-break">{{transactionType this}}</td>
+                        </tr>
+                        <tr>
+                            <th class="text-nowrap" scope="row">Value</th>
+                            <td class="text-break">{{value}} ETH</td>
+                        </tr>
+                        <tr>
+                            <th class="text-nowrap" scope="row">Date</th>
+                            <td class="text-break">{{timestamp}} - {{formattedDate}}</td>
+                        </tr>
+                        <tr>
+                            <th class="text-nowrap" scope="row">Gas Price</th>
+                            <td class="text-break">{{gasPrice}}</td>
+                        </tr>
+                        <tr>
+                            <th class="text-nowrap" scope="row">Gas Limit</th>
+                            <td class="text-break">{{gasLimit}}</td>
+                        </tr>
+                        <tr>
+                            <th class="text-nowrap" scope="row">Nonce</th>
+                            <td class="text-break">{{nonce}}</td>
+                        </tr>
+                        {{#if signature}}
+                            <tr>
+                                <th scope="row">Signature</th>
+                                <td>
+                                    <ul class="mb-0">
+                                        <li><code>r:</code> {{signature.r}}</li>
+                                        <li><code>s:</code> {{signature.s}}</li>
+                                        <li><code>v:</code> {{signature.v}}</li>
+                                    </ul>
+                                </td>
+                            </tr>
+                        {{/if}}
+                        </tbody>
+                    </table>
+                </div>
+            {{/unless}}
+        </div>
+    </div>
+</div>

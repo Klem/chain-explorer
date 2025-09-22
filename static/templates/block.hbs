@@ -1,0 +1,55 @@
+<head>
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<h1 id="block-title">Block #{{block.hash}}</h1>
+
+{{#if error}}
+    {{> error}}
+{{/if}}
+{{#unless error}}
+<table class="table-striped table-bordered w-100">
+    <tbody>
+    <tr><th>Block Hash</th><td>{{block.hash}}</td></tr>
+    <tr><th>Block Number</th><td>{{block.number}}</td></tr>
+    <tr><th>Timestamp</th><td>{{formatTimestamp block.timestamp}}</td></tr>
+    <tr><th>Miner Address</th><td><a href="/account/{{block.miner}}">{{block.miner}}</a></td></tr>
+    <tr><th>Miner ENS</th><td><a href="/account/{{block.miner}}">{{minerName}}</a></td></tr>
+    <tr><th>Transactions Count</th><td>{{block.transactions.length}}</td></tr>
+    <tr><th>Parent Hash</th><td><a href="/block/{{block.parentHash}}">{{block.parentHash}}</a></td></tr>
+    <tr><th>Nonce</th><td>{{block.nonce}}</td></tr>
+    <tr><th>Difficulty</th><td>{{block.difficulty}}</td></tr>
+    <tr><th>Gas Used</th><td>{{block.gasUsed}}</td></tr>
+    <tr><th>Gas Limit</th><td>{{block.gasLimit}}</td></tr>
+
+    <tr><th colspan="2" class="text-center">Transactions</th></tr>
+    <tr>
+        <td colspan="2">
+            {{#if transactions.length}}
+                <table class="table table-sm table-striped" id="transactionsTable">
+                    <thead>
+                    <tr>
+                        <th class="text-truncate w-25">Tx Hash</th>
+                        <th class="text-truncate w-25">From</th>
+                        <th class="text-truncate w-25">To</th>
+                        <th class="w-auto">Value (ETH)</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {{#each transactions}}
+                        <tr>
+                            <td><a href="#" class="tx-hash-link" data-tx='{{json this}}'>{{hash}}</a></td>
+                            <td><a href="/account/{{from}}">{{from}}</a></td>
+                            <td><a href="/account/{{to}}">{{to}}</a></td>
+                            <td>{{value}}</td>
+                        </tr>
+                    {{/each}}
+                    </tbody>
+                </table>
+            {{else}}
+                <p>No transactions to display</p>
+            {{/if}}
+        </td>
+    </tr>
+    </tbody>
+</table>
+{{/unless}}
